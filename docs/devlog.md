@@ -30,3 +30,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - Implemented `TradingBot` class orchestrating feed, strategy and portfolio.
 - Simplified `main.py` to run the bot for a short demo.
 - Documented new modules and trading loop in README.
+
+## Step 6
+- Implemented `AggregatedPriceFeed` combining Jupiter and Pyth sources.
+- Updated `TradingBot` to use the aggregated feed by default and request
+  swap quotes from Jupiter when executing trades.
+- Added new module description and trading loop note in README.
