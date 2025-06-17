@@ -32,12 +32,10 @@ class TestPriceFeedsIntegration:
         print(f"Pyth SOL price: ${price}")
         
         # Allow None if service is down, but validate structure if available
-        if price is not None:
-            assert isinstance(price, (int, float))
-            assert price > 0
-            assert price < 10000  # Reasonable upper bound for SOL price
-        else:
-            print("Pyth API not available - this may be due to network issues")
+        assert price is not None, f"Pyth price is None"
+        assert isinstance(price, (int, float)), f"Pyth price type: {type(price)}"
+        assert price > 0, f"Pyth price is not positive: {price}"
+        assert price < 10000, f"Pyth price is too high: {price}"
 
     @pytest.mark.asyncio
     async def test_aggregated_feed_real(self):
