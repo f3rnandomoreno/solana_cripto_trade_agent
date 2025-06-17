@@ -124,6 +124,7 @@ MAX_DRAWDOWN_PCT=20
 | **Jupiter API** | Cotizaciones instantáneas + rutas de swap | `src/data/jupiter_quote.py` |
 | **Pyth Network** | Precio fiable on-chain (SOL/USD) | WebSocket vía `pyth-client-py` |
 | **Mock Feed** | Generación local de precios | `src/data/mock_feed.py` |
+| **Aggregated Feed** | Promedio Jupiter + Pyth (fallback) | `src/data/aggregated_feed.py` |
 
 ### 5.2 Strategy
 - **Indicadores técnicos (EMA 12/50, RSI 14, Bollinger 20/2)**
@@ -143,6 +144,7 @@ MAX_DRAWDOWN_PCT=20
 
 ### 5.5 Trading loop
 - `bot.TradingBot` integra feed, estrategia y cartera en un loop asíncrono.
+- Cada trade consulta un `quote` a Jupiter para estimar la ejecución.
 
 ---
 
