@@ -130,14 +130,13 @@ MAX_DRAWDOWN_PCT=20
 - Validación IA: modelo ligero (random-forest) que aprende qué señales históricas fueron rentables
 
 ### 5.3 Execution
-- **Jupiter Python SDK** genera transacción en base64 lista para firmar  
-- Firmado con `solana.Keypair` + `solders.VersionedTransaction`  
-- Envío via `client.send_raw_transaction`  
-- Gestor de cartera para actualizar balances y P/L  
+- Implementación en `execution/jupiter_client.py` para solicitar cotizaciones a Jupiter (stub si no hay red).
+- `execution/portfolio.py` mantiene el saldo de SOL/USDC y calcula P/L.
+- La versión completa usaría Jupiter Python SDK para construir la transacción, firmarla con `solana.Keypair` y enviarla mediante `client.send_raw_transaction`.
 
 ### 5.4 Logger / Console UI
-- `rich` para tabla en vivo con: timestamp, par, tipo, qty, precio, fee, P/L  
-- Historial persistente en `logs/trades.csv`
+- `utils/logger.py` configura el logging con `rich` y guarda cada trade en `logs/trades.csv`.
+- `utils/backtest.py` permite pruebas rápidas de la estrategia con datos históricos simulados.
 
 ---
 

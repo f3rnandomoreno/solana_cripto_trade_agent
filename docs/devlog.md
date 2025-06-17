@@ -18,3 +18,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - Created `strategy/simple_strategy.py` with a basic signal generator.
 - Updated `main.py` to collect recent prices and print the generated signal.
 - Documented new modules in README.
+
+## Step 4
+- Implemented stubbed Jupiter client in `execution/jupiter_client.py`.
+- Created `execution/portfolio.py` for basic position tracking.
+- Added `utils/logger.py` and `utils/backtest.py` with simple helpers.
+- Updated README with new module descriptions.
