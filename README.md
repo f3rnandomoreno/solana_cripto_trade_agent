@@ -99,13 +99,15 @@ rich
 
 ## 4. Configuración `.env`
 
+Define estas variables dentro de `.env` tras activar la venv:
+
 ```dotenv
 # Clave privada del wallet (array base58 o semilla en hex)
-PRIVATE_KEY="[...]"
+PRIVATE_KEY="CHANGE_ME"
 # RPC endpoint – usa tu proveedor o mainnet-beta público
-RPC_ENDPOINT="https://mainnet.helius-rpc.com/?api-key=TU_API"
+RPC_ENDPOINT="https://api.mainnet-beta.solana.com"
 # API de precios históricos (opcional)
-CRYPTOCOMPARE_KEY="..."
+CRYPTOCOMPARE_KEY=""  # opcional
 # Parámetros de trading
 BASE_MINT="So11111111111111111111111111111111111111112"   # SOL
 QUOTE_MINT="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" # USDC
