@@ -1,7 +1,6 @@
 import asyncio
 from typing import List, Optional
 
-from src.data.mock_feed import MockPriceFeed
 from src.data.aggregated_feed import AggregatedPriceFeed
 from src.data.data_manager import data_manager
 from src.strategy.simple_strategy import generate_signal
@@ -16,8 +15,9 @@ from src.config import settings
 class TradingBot:
     """Orchestrates price feed, strategy and portfolio."""
 
-    def __init__(self, starting_cash: float = None, use_mock: bool = False):
-        self.feed = MockPriceFeed() if use_mock else AggregatedPriceFeed()
+    def __init__(self, starting_cash: float = None):
+        # Siempre usar feeds reales - no se permite mock
+        self.feed = AggregatedPriceFeed()
         
         # Use configured trading capital instead of arbitrary starting_cash
         if starting_cash is None:
@@ -45,9 +45,8 @@ class TradingBot:
             self.logger.warning("Price feed unavailable")
             return
         
-        # Guardar precio en base de datos
-        feed_source = "mock" if isinstance(self.feed, MockPriceFeed) else "aggregated"
-        data_manager.save_price_data(price, feed_source)
+        # Guardar precio en base de datos (siempre de fuente real)
+        data_manager.save_price_data(price, "aggregated")
         
         self.prices.append(price)
         self.logger.info(f"Price: {price} USD")

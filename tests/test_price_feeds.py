@@ -3,7 +3,7 @@ import pytest
 from src.data.jupiter_quote import fetch_sol_price
 from src.data.pyth_feed import fetch_pyth_sol_price
 from src.data.aggregated_feed import AggregatedPriceFeed
-from src.data.mock_feed import MockPriceFeed
+from src.data.mock_feed import MockPriceFeed  # Solo para testing
 
 
 class TestPriceFeedsIntegration:
