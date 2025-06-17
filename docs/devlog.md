@@ -42,3 +42,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - `trade` ejecuta el `TradingBot` y acepta `--mock` para usar el feed simulado.
 - `backtest` carga precios desde un CSV y reporta el rendimiento obtenido.
 - Se añadieron instrucciones de uso en el README.
+
+## Step 8
+- Implemented `strategy/risk.py` providing a simple max drawdown check.
+- Portfolio now tracks `peak_value` and exposes `total_value` method.
+- `TradingBot` liquidates all positions when drawdown exceeds the configured threshold.
+- Added unit tests for the risk module.

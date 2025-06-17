@@ -10,6 +10,11 @@ class Portfolio:
     quote_symbol: str = "USDC"
     base_balance: float = 0.0
     quote_balance: float = 0.0
+    peak_value: float = 0.0  # highest USD value observed
+
+    def __post_init__(self) -> None:
+        """Initialize peak value based on starting quote balance."""
+        self.peak_value = self.quote_balance
 
     def update_from_trade(self, side: str, quantity: float, price: float, fee: float = 0.0) -> None:
         """Update balances after executing a trade."""
@@ -24,6 +29,10 @@ class Portfolio:
     def value_usd(self) -> float:
         """Return portfolio value in USD based on quote balance only."""
         return self.quote_balance
+
+    def total_value(self, price: float) -> float:
+        """Return portfolio value including base asset priced in USD."""
+        return self.quote_balance + self.base_balance * price
 
     def as_dict(self) -> Dict[str, float]:
         return {

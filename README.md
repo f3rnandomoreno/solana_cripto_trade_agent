@@ -132,6 +132,8 @@ MAX_DRAWDOWN_PCT=20
   `strategy/simple_strategy.py`.
 - Filtro de volumen (evita operar con liquidez baja)
 - Validación IA: modelo ligero (random-forest) que aprende qué señales históricas fueron rentables
+- Gestión de riesgo: `strategy/risk.py` verifica la caída máxima permitida y
+  fuerza la salida de SOL cuando se supera `MAX_DRAWDOWN_PCT`.
 
 ### 5.3 Execution
 - Implementación en `execution/jupiter_client.py` para solicitar cotizaciones a Jupiter (stub si no hay red).
@@ -145,6 +147,8 @@ MAX_DRAWDOWN_PCT=20
 ### 5.5 Trading loop
 - `bot.TradingBot` integra feed, estrategia y cartera en un loop asíncrono.
 - Cada trade consulta un `quote` a Jupiter para estimar la ejecución.
+- Antes de ejecutar una nueva señal se comprueba la regla de riesgo y se
+  liquidan las posiciones si el "drawdown" supera el umbral configurado.
 
 ---
 
@@ -177,6 +181,7 @@ flowchart TD
 | **Stop-loss** | Pérdida ≥ `MAX_DRAWDOWN_PCT` | Salir a USDC |
 
 > Ajusta los parámetros en `strategy/config.yaml`.
+> El módulo `strategy/risk.py` se encarga de activar este stop-loss de forma automática.
 
 ---
 
