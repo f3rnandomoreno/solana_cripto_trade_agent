@@ -56,9 +56,11 @@ class TradingSimulator:
         self.realized_pnl = 0.0
         self.start_time = time.time()
         
-        print(f"🎮 MODO SIMULACIÓN ACTIVADO")
-        print(f"💰 Balance inicial: {self.initial_balance:.4f} SOL")
-        print(f"⚠️  NO SE EJECUTARÁN TRANSACCIONES REALES")
+        from src.utils.logger import setup_logger
+        logger = setup_logger()
+        logger.info(f"🎮 MODO SIMULACIÓN ACTIVADO")
+        logger.info(f"💰 Balance inicial: {self.initial_balance:.4f} SOL")
+        logger.warning(f"⚠️  NO SE EJECUTARÁN TRANSACCIONES REALES")
         
     def simulate_trade(self, side: str, amount_sol: float, price: float) -> Dict:
         """

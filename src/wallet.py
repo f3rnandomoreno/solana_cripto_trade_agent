@@ -141,7 +141,9 @@ class MultiWallet:
         passphrases = ["", "phantom", "solana", "wallet", "crypto", " "]
         all_accounts.extend(self.derive_with_passphrases(passphrases))
         
-        print(f"🔍 Scanning {len(all_accounts)} derived accounts...")
+        from src.utils.logger import setup_logger
+        logger = setup_logger()
+        logger.info(f"🔍 Scanning {len(all_accounts)} derived accounts...")
         
         found_accounts = []
         
@@ -150,8 +152,8 @@ class MultiWallet:
             
             # Check if this matches target address
             if target_address and address == target_address:
-                print(f"✅ Found target address: {address}")
-                print(f"   Derivation: {account.derivation_method}")
+                logger.info(f"✅ Found target address: {address}")
+                logger.info(f"   Derivation: {account.derivation_method}")
                 return account
             
             # Check balance
@@ -161,10 +163,10 @@ class MultiWallet:
                 
                 if balance_sol > 0:
                     found_accounts.append((account, balance_sol))
-                    print(f"💰 Found account with {balance_sol:.6f} SOL: {address}")
-                    print(f"   Derivation: {account.derivation_method}")
+                    logger.info(f"💰 Found account with {balance_sol:.6f} SOL: {address}")
+                    logger.info(f"   Derivation: {account.derivation_method}")
             except Exception as e:
-                print(f"❌ Error checking {address}: {e}")
+                logger.error(f"❌ Error checking {address}: {e}")
                 continue
         
         # Return account with highest balance, or target address match

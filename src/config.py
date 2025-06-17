@@ -53,10 +53,14 @@ def derive_private_key_from_mnemonic(mnemonic: str):
         keypair = Keypair.from_seed(private_key_32)
         return list(keypair.to_bytes())
     except Exception as e:
-        print(f"Error derivando clave privada del mnemonic: {e}")
+        from src.utils.logger import setup_logger
+        logger = setup_logger()
+        logger.error(f"Error derivando clave privada del mnemonic: {e}")
         return None
     except Exception as e:
-        print(f"Error derivando clave privada del mnemonic: {e}")
+        from src.utils.logger import setup_logger
+        logger = setup_logger()
+        logger.error(f"Error derivando clave privada del mnemonic: {e}")
         return None
 
 @dataclass
@@ -79,6 +83,9 @@ class Settings:
     simulation_initial_balance: float = float(os.getenv("SIMULATION_INITIAL_BALANCE", 1.0))
 
     def __post_init__(self):
+        from src.utils.logger import setup_logger
+        logger = setup_logger()
+        
         pk = os.getenv("PRIVATE_KEY", "")
         if pk and pk != "CHANGE_ME":
             self.private_key = pk
@@ -89,8 +96,8 @@ class Settings:
                 if derived:
                     self.private_key = str(derived)
                 else:
-                    print("No se pudo derivar la clave privada del MNEMONIC.")
+                    logger.error("No se pudo derivar la clave privada del MNEMONIC.")
             else:
-                print("No se encontró PRIVATE_KEY ni MNEMONIC en el entorno.")
+                logger.warning("No se encontró PRIVATE_KEY ni MNEMONIC en el entorno.")
 
 settings = Settings()
