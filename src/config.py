@@ -5,37 +5,56 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def derive_private_key_from_mnemonic(mnemonic: str, account: int = 0, change: int = 0) -> list | None:
-    """Derive a Solana private key from ``mnemonic`` using the standard BIP44 path.
-
-    Parameters
-    ----------
-    mnemonic: str
-        The 12 or 24 word mnemonic seed phrase.
-    account: int, optional
-        Account number for the derivation path, default is ``0``.
-    change: int, optional
-        Change index for the derivation path, default is ``0``.
-
-    Returns
-    -------
-    list | None
-        The derived private key as a list of integers or ``None`` if derivation fails.
+def derive_private_key_from_mnemonic(mnemonic: str):
     """
-
+    Derive private key from mnemonic using Phantom-compatible ED25519 derivation.
+    Uses path m/44'/501'/0'/0' which is Phantom's default.
+    """
     try:
-        from bip_utils import Bip39SeedGenerator, Bip44, Bip44Coins, Bip44Changes
+        import hashlib
+        import hmac
+        import struct
+        from mnemonic import Mnemonic
+        from solders.keypair import Keypair
 
-        seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
-        bip44_ctx = (
-            Bip44.FromSeed(seed_bytes, Bip44Coins.SOLANA)
-            .Purpose()
-            .Coin()
-            .Account(account)
-            .Change(Bip44Changes(change))
-            .AddressIndex(0)
-        )
-        return list(bip44_ctx.PrivateKey().Raw().ToBytes())
+        def hmac_sha512(key, data):
+            return hmac.new(key, data, hashlib.sha512).digest()
+
+        def derive_ed25519_path(seed, path):
+            """ED25519 HD key derivation compatible with Phantom wallet"""
+            if not path.startswith('m/'):
+                raise ValueError("Path must start with 'm/'")
+            path_parts = path[2:].split('/')
+            indices = []
+            for part in path_parts:
+                if part.endswith("'"):
+                    index = int(part[:-1]) + 2**31
+                else:
+                    index = int(part)
+                indices.append(index)
+            master_secret = hmac_sha512(b"ed25519 seed", seed)
+            master_private_key = master_secret[:32]
+            master_chain_code = master_secret[32:]
+            private_key = master_private_key
+            chain_code = master_chain_code
+            for index in indices:
+                if index < 2**31:
+                    index += 2**31
+                data = b'\x00' + private_key + struct.pack('>I', index)
+                derived = hmac_sha512(chain_code, data)
+                private_key = derived[:32]
+                chain_code = derived[32:]
+            return private_key
+
+        mnemo = Mnemonic("english")
+        seed = mnemo.to_seed(mnemonic)
+        path = "m/44'/501'/0'/0'"
+        private_key_32 = derive_ed25519_path(seed, path)
+        keypair = Keypair.from_seed(private_key_32)
+        return list(keypair.to_bytes())
+    except Exception as e:
+        print(f"Error derivando clave privada del mnemonic: {e}")
+        return None
     except Exception as e:
         print(f"Error derivando clave privada del mnemonic: {e}")
         return None
@@ -52,7 +71,7 @@ class Settings:
 
     def __post_init__(self):
         pk = os.getenv("PRIVATE_KEY", "")
-        if pk:
+        if pk and pk != "CHANGE_ME":
             self.private_key = pk
         else:
             mnemonic = os.getenv("MNEMONIC", "")
