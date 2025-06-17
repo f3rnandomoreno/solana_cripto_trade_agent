@@ -68,6 +68,11 @@ class Settings:
     trading_interval_sec: int = int(os.getenv("TRADING_INTERVAL_SEC", 60))
     slippage_bps: int = int(os.getenv("SLIPPAGE_BPS", 50))
     max_drawdown_pct: int = int(os.getenv("MAX_DRAWDOWN_PCT", 20))
+    
+    # Trading capital configuration
+    trading_capital_sol: float = float(os.getenv("TRADING_CAPITAL_SOL", 0.1))
+    max_position_size_pct: float = float(os.getenv("MAX_POSITION_SIZE_PCT", 80.0))
+    reserve_balance_sol: float = float(os.getenv("RESERVE_BALANCE_SOL", 0.02))
 
     def __post_init__(self):
         pk = os.getenv("PRIVATE_KEY", "")

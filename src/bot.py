@@ -13,11 +13,23 @@ from src.strategy.risk import exceed_max_drawdown
 class TradingBot:
     """Orchestrates price feed, strategy and portfolio."""
 
-    def __init__(self, starting_cash: float = 1000.0, use_mock: bool = False):
+    def __init__(self, starting_cash: float = None, use_mock: bool = False):
         self.feed = MockPriceFeed() if use_mock else AggregatedPriceFeed()
-        self.portfolio = Portfolio(quote_balance=starting_cash)
+        
+        # Use configured trading capital instead of arbitrary starting_cash
+        if starting_cash is None:
+            from src.config import settings
+            starting_cash = settings.trading_capital_sol
+        
+        self.portfolio = Portfolio()  # Will auto-initialize with trading capital
         self.logger = setup_logger()
         self.prices: List[float] = []
+        
+        # Log trading capital configuration
+        self.logger.info(f"Trading Capital Configuration:")
+        self.logger.info(f"  Trading Capital: {self.portfolio.trading_capital:.4f} SOL")
+        self.logger.info(f"  Max Position: {settings.max_position_size_pct}% = {self.portfolio.calculate_max_trade_size():.4f} SOL")
+        self.logger.info(f"  Reserve Balance: {settings.reserve_balance_sol:.4f} SOL")
 
     async def step(self) -> None:
         price = await self.feed.get_price()
@@ -37,28 +49,54 @@ class TradingBot:
 
         signal = generate_signal(self.prices)
 
-        if signal == "BUY" and self.portfolio.quote_balance >= price:
-            self.portfolio.update_from_trade("BUY", 1, price)
-            log_trade({"side": "BUY", "price": price})
-            quote = await request_quote(
-                input_mint="So11111111111111111111111111111111111111112",
-                output_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                amount=1_000_000_000,
-            )
-            if quote:
-                self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
-            self.logger.info(f"Executed BUY @ {price}")
-        elif signal == "SELL" and self.portfolio.base_balance >= 1:
-            self.portfolio.update_from_trade("SELL", 1, price)
-            log_trade({"side": "SELL", "price": price})
+        if signal == "BUY":
+            # Calculate position size based on available capital
+            max_trade_size = self.portfolio.calculate_max_trade_size()
+            available_capital = self.portfolio.get_available_capital()
+            
+            # Calculate actual trade size (in SOL terms, using price to convert)
+            trade_size_sol = min(max_trade_size, available_capital)
+            
+            # Validate trade size
+            validation = self.portfolio.validate_trade_size(trade_size_sol)
+            
+            if validation["valid"] and trade_size_sol > 0 and self.portfolio.quote_balance >= trade_size_sol * price:
+                self.portfolio.update_from_trade("BUY", trade_size_sol, price)
+                log_trade({"side": "BUY", "price": price, "quantity": trade_size_sol})
+                
+                # Request quote for actual trade amount
+                amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
+                quote = await request_quote(
+                    input_mint="So11111111111111111111111111111111111111112",
+                    output_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                    amount=amount_lamports,
+                )
+                if quote:
+                    self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
+                
+                self.logger.info(f"Executed BUY {trade_size_sol:.4f} SOL @ ${price}")
+            else:
+                reason = validation.get("reason", "Insufficient capital")
+                self.logger.info(f"BUY signal but cannot trade: {reason}")
+                
+        elif signal == "SELL" and self.portfolio.base_balance > 0:
+            # Sell current position (or part of it)
+            trade_size_sol = self.portfolio.base_balance
+            
+            self.portfolio.update_from_trade("SELL", trade_size_sol, price)
+            log_trade({"side": "SELL", "price": price, "quantity": trade_size_sol})
+            
+            # Request quote for actual trade amount
+            amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
             quote = await request_quote(
                 input_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
                 output_mint="So11111111111111111111111111111111111111112",
-                amount=1_000_000_000,
+                amount=amount_lamports,
             )
             if quote:
                 self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
-            self.logger.info(f"Executed SELL @ {price}")
+            
+            self.logger.info(f"Executed SELL {trade_size_sol:.4f} SOL @ ${price}")
         else:
             self.logger.info("No trade executed")
 
