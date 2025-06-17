@@ -7,6 +7,7 @@ from src.strategy.simple_strategy import generate_signal
 from src.execution.portfolio import Portfolio
 from src.execution.jupiter_client import request_quote
 from src.utils.logger import setup_logger, log_trade
+from src.strategy.risk import exceed_max_drawdown
 
 
 class TradingBot:
@@ -25,6 +26,15 @@ class TradingBot:
             return
         self.prices.append(price)
         self.logger.info(f"Price: {price} USD")
+
+        # Check risk limits before generating new signal
+        if exceed_max_drawdown(self.portfolio, price) and self.portfolio.base_balance > 0:
+            self.logger.warning("Max drawdown exceeded - liquidating position")
+            self.portfolio.update_from_trade("SELL", self.portfolio.base_balance, price)
+            log_trade({"side": "STOP_SELL", "price": price})
+            self.logger.info(f"Balances: {self.portfolio.as_dict()}")
+            return
+
         signal = generate_signal(self.prices)
 
         if signal == "BUY" and self.portfolio.quote_balance >= price:
