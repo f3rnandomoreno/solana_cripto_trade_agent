@@ -12,3 +12,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - Added Pyth network price feed using `pythclient.HermesClient`.
 - Updated `requirements.txt` with `pythclient` dependency.
 - Expanded `main.py` to display prices from Jupiter and Pyth.
+
+## Step 3
+- Implemented EMA, RSI and Bollinger Bands helpers in `strategy/indicators.py`.
+- Created `strategy/simple_strategy.py` with a basic signal generator.
+- Updated `main.py` to collect recent prices and print the generated signal.
+- Documented new modules in README.
