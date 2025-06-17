@@ -74,6 +74,7 @@ cd solana-ai-bot
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # añade tus claves
+python src/main.py     # ejecuta demo de precios y señal
 ```
 
 **`requirements.txt` mínimo**
@@ -122,9 +123,11 @@ MAX_DRAWDOWN_PCT=20
 | **Pyth Network** | Precio fiable on-chain (SOL/USD) | WebSocket vía `pyth-client-py` |
 
 ### 5.2 Strategy
-- **Indicadores técnicos (EMA 12/50, RSI 14, Bollinger 20/2)**  
-- Filtro de volumen (evita operar con liquidez baja)  
-- Validación IA: modelo ligero (random-forest) que aprende qué señales históricas fueron rentables  
+- **Indicadores técnicos (EMA 12/50, RSI 14, Bollinger 20/2)**
+- Implementación en `strategy/indicators.py` y señales básicas en
+  `strategy/simple_strategy.py`.
+- Filtro de volumen (evita operar con liquidez baja)
+- Validación IA: modelo ligero (random-forest) que aprende qué señales históricas fueron rentables
 
 ### 5.3 Execution
 - **Jupiter Python SDK** genera transacción en base64 lista para firmar  
