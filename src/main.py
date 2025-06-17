@@ -2,12 +2,12 @@ import argparse
 import asyncio
 from pathlib import Path
 
-from src.bot import TradingBot
-from src.utils.backtest import load_prices_csv, run_backtest
+from .bot import TradingBot
+from .utils.backtest import load_prices_csv, run_backtest
 
 
 async def run_bot(args: argparse.Namespace) -> None:
-    bot = TradingBot(use_mock=args.mock)
+    bot = TradingBot()  # No mock parameter - always real feeds
     await bot.run(steps=args.steps, interval=args.interval)
 
 
@@ -23,8 +23,7 @@ def parse_args() -> argparse.Namespace:
 
     trade = sub.add_parser("trade", help="Run trading bot")
     trade.add_argument("--steps", type=int, default=10)
-    trade.add_argument("--interval", type=float, default=1.0)
-    trade.add_argument("--mock", action="store_true")
+    trade.add_argument("--interval", type=float, default=30.0)
 
     back = sub.add_parser("backtest", help="Run backtest from CSV")
     back.add_argument("csv")
