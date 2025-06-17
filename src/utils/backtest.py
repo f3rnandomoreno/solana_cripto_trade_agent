@@ -5,6 +5,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List
 
+
+def load_prices_csv(path: Path) -> List[float]:
+    """Load a list of prices from a CSV file with one price per line."""
+    with path.open() as f:
+        reader = csv.reader(f)
+        return [float(row[0]) for row in reader if row]
+
 from src.strategy.simple_strategy import generate_signal
 from src.execution.portfolio import Portfolio
 

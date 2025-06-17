@@ -36,3 +36,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - Updated `TradingBot` to use the aggregated feed by default and request
   swap quotes from Jupiter when executing trades.
 - Added new module description and trading loop note in README.
+
+## Step 7
+- Introduced CLI in `main.py` with subcommands `trade` and `backtest`.
+- `trade` ejecuta el `TradingBot` y acepta `--mock` para usar el feed simulado.
+- `backtest` carga precios desde un CSV y reporta el rendimiento obtenido.
+- Se añadieron instrucciones de uso en el README.

@@ -47,7 +47,7 @@ solana-ai-bot/
 ├─ .env.example            ← plantilla de variables
 └─ src/
    ├─ bot.py               ← loop principal
-   ├─ main.py              ← punto de entrada
+   ├─ main.py              ← CLI (`trade` y `backtest`)
    ├─ config.py
    ├─ data/
    │  ├─ pyth_feed.py
@@ -76,7 +76,7 @@ cd solana-ai-bot
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # añade tus claves
-python src/main.py     # ejecuta demo de precios y señal
+python src/main.py trade --steps 10 --mock   # demo con feed simulado
 ```
 
 **`requirements.txt` mínimo**
@@ -183,12 +183,11 @@ flowchart TD
 ## 8. Back-testing y simulación
 
 ```bash
-python -m utils.backtest --pair SOL/USDC --from 2024-01-01 --to 2024-06-01
+python src/main.py backtest datos.csv
 ```
 
-- Usa histórico de precios (CoinGecko o CryptoCompare)  
-- Reporta métricas: total return, Sharpe, drawdown, % aciertos  
-- Permite *grid search* de parámetros o entrenamiento del modelo IA  
+`datos.csv` debe contener una columna con precios históricos de SOL.
+El comando muestra el retorno total y el número de operaciones simuladas.
 
 ---
 
