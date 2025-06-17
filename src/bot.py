@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from src.data.mock_feed import MockPriceFeed
 from src.data.aggregated_feed import AggregatedPriceFeed
+from src.data.data_manager import data_manager
 from src.strategy.simple_strategy import generate_signal
 from src.execution.portfolio import Portfolio
 from src.execution.jupiter_client import request_quote
@@ -43,6 +44,11 @@ class TradingBot:
         if price is None:
             self.logger.warning("Price feed unavailable")
             return
+        
+        # Guardar precio en base de datos
+        feed_source = "mock" if isinstance(self.feed, MockPriceFeed) else "aggregated"
+        data_manager.save_price_data(price, feed_source)
+        
         self.prices.append(price)
         self.logger.info(f"Price: {price} USD")
         
@@ -72,8 +78,28 @@ class TradingBot:
             validation = self.portfolio.validate_trade_size(trade_size_sol)
             
             if validation["valid"] and trade_size_sol > 0 and self.portfolio.quote_balance >= trade_size_sol * price:
+                # Capturar valor del portfolio antes del trade
+                portfolio_before = self.portfolio.as_dict()
+                portfolio_value_before = portfolio_before.get("trading_capital", 0)
+                
                 self.portfolio.update_from_trade("BUY", trade_size_sol, price)
                 log_trade({"side": "BUY", "price": price, "quantity": trade_size_sol})
+                
+                # Capturar valor del portfolio después del trade
+                portfolio_after = self.portfolio.as_dict()
+                portfolio_value_after = portfolio_after.get("trading_capital", 0)
+                
+                # Guardar trade en base de datos
+                data_manager.save_trade_data(
+                    side="BUY",
+                    amount_sol=trade_size_sol,
+                    price=price,
+                    value_usd=trade_size_sol * price,
+                    fees_sol=0.0,  # Simplificado por ahora
+                    simulation=settings.simulation_mode,
+                    portfolio_value_before=portfolio_value_before,
+                    portfolio_value_after=portfolio_value_after
+                )
                 
                 if settings.simulation_mode:
                     self.logger.info(f"🎮 SIMULADO: BUY {trade_size_sol:.4f} SOL @ ${price}")
@@ -97,8 +123,28 @@ class TradingBot:
             # Sell current position (or part of it)
             trade_size_sol = self.portfolio.base_balance
             
+            # Capturar valor del portfolio antes del trade
+            portfolio_before = self.portfolio.as_dict()
+            portfolio_value_before = portfolio_before.get("trading_capital", 0)
+            
             self.portfolio.update_from_trade("SELL", trade_size_sol, price)
             log_trade({"side": "SELL", "price": price, "quantity": trade_size_sol})
+            
+            # Capturar valor del portfolio después del trade
+            portfolio_after = self.portfolio.as_dict()
+            portfolio_value_after = portfolio_after.get("trading_capital", 0)
+            
+            # Guardar trade en base de datos
+            data_manager.save_trade_data(
+                side="SELL",
+                amount_sol=trade_size_sol,
+                price=price,
+                value_usd=trade_size_sol * price,
+                fees_sol=0.0,  # Simplificado por ahora
+                simulation=settings.simulation_mode,
+                portfolio_value_before=portfolio_value_before,
+                portfolio_value_after=portfolio_value_after
+            )
             
             if settings.simulation_mode:
                 self.logger.info(f"🎮 SIMULADO: SELL {trade_size_sol:.4f} SOL @ ${price}")
@@ -117,7 +163,19 @@ class TradingBot:
         else:
             self.logger.info("No trade executed")
 
-        self.logger.info(f"Balances: {self.portfolio.as_dict()}")
+        # Guardar snapshot del portfolio
+        portfolio_data = self.portfolio.as_dict()
+        data_manager.save_portfolio_snapshot(
+            sol_balance=portfolio_data.get("SOL", 0),
+            usd_balance=portfolio_data.get("USDC", 0),
+            total_value_usd=price * portfolio_data.get("SOL", 0) + portfolio_data.get("USDC", 0),
+            realized_pnl=portfolio_data.get("realized_pnl", 0),
+            unrealized_pnl=portfolio_data.get("unrealized_pnl", 0),
+            simulation=settings.simulation_mode,
+            metadata={"current_price": price}
+        )
+        
+        self.logger.info(f"Balances: {portfolio_data}")
 
     async def run(self, steps: int = 50, interval: float = 1.0) -> None:
         for _ in range(steps):
