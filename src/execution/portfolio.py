@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 from src.config import settings
+from .simulation_client import simulator
 
 
 @dataclass
@@ -28,6 +29,19 @@ class Portfolio:
 
     def update_from_trade(self, side: str, quantity: float, price: float, fee: float = 0.0) -> None:
         """Update balances after executing a trade."""
+        if settings.simulation_mode and simulator:
+            # En modo simulación, usar el simulador
+            result = simulator.simulate_trade(side, quantity, price)
+            if result["success"]:
+                # Actualizar balance local desde simulador
+                self.quote_balance = result["new_balance_sol"]
+                if result.get("position"):
+                    self.base_balance = result["position"]["amount_sol"]
+                else:
+                    self.base_balance = 0.0
+            return
+        
+        # Modo real - actualizar balances normalmente
         if side.upper() == "BUY":
             self.base_balance += quantity
             self.quote_balance -= quantity * price + fee
@@ -86,7 +100,7 @@ class Portfolio:
         return {"valid": True, "reason": "Trade size valid"}
 
     def as_dict(self) -> Dict[str, float]:
-        return {
+        base_dict = {
             self.base_symbol: self.base_balance,
             self.quote_symbol: self.quote_balance,
             "trading_capital": self.trading_capital,
@@ -94,3 +108,20 @@ class Portfolio:
             "available_capital": self.get_available_capital(),
             "capital_utilization_pct": (self.get_position_value_sol() / self.trading_capital * 100) if self.trading_capital > 0 else 0
         }
+        
+        # Agregar información de simulación si está activa
+        if settings.simulation_mode and simulator:
+            sim_status = simulator.get_portfolio_status()
+            base_dict.update({
+                "simulation_mode": True,
+                "realized_pnl": sim_status["realized_pnl"],
+                "unrealized_pnl": sim_status["unrealized_pnl"],
+                "total_pnl": sim_status["total_pnl"],
+                "total_return_pct": sim_status["total_return_pct"],
+                "total_trades": sim_status["total_trades"],
+                "total_fees_paid": sim_status["total_fees_paid"]
+            })
+        else:
+            base_dict["simulation_mode"] = False
+            
+        return base_dict

@@ -73,6 +73,10 @@ class Settings:
     trading_capital_sol: float = float(os.getenv("TRADING_CAPITAL_SOL", 0.1))
     max_position_size_pct: float = float(os.getenv("MAX_POSITION_SIZE_PCT", 80.0))
     reserve_balance_sol: float = float(os.getenv("RESERVE_BALANCE_SOL", 0.02))
+    
+    # Simulation mode
+    simulation_mode: bool = os.getenv("SIMULATION_MODE", "true").lower() == "true"
+    simulation_initial_balance: float = float(os.getenv("SIMULATION_INITIAL_BALANCE", 1.0))
 
     def __post_init__(self):
         pk = os.getenv("PRIVATE_KEY", "")

@@ -6,8 +6,10 @@ from src.data.aggregated_feed import AggregatedPriceFeed
 from src.strategy.simple_strategy import generate_signal
 from src.execution.portfolio import Portfolio
 from src.execution.jupiter_client import request_quote
+from src.execution.simulation_client import simulator
 from src.utils.logger import setup_logger, log_trade
 from src.strategy.risk import exceed_max_drawdown
+from src.config import settings
 
 
 class TradingBot:
@@ -18,7 +20,6 @@ class TradingBot:
         
         # Use configured trading capital instead of arbitrary starting_cash
         if starting_cash is None:
-            from src.config import settings
             starting_cash = settings.trading_capital_sol
         
         self.portfolio = Portfolio()  # Will auto-initialize with trading capital
@@ -26,6 +27,12 @@ class TradingBot:
         self.prices: List[float] = []
         
         # Log trading capital configuration
+        if settings.simulation_mode:
+            self.logger.info(f"🎮 MODO SIMULACIÓN ACTIVADO - NO SE EJECUTARÁN TRANSACCIONES REALES")
+            self.logger.info(f"💰 Balance inicial simulado: {settings.simulation_initial_balance:.4f} SOL")
+        else:
+            self.logger.info(f"⚠️  MODO REAL - SE EJECUTARÁN TRANSACCIONES REALES")
+        
         self.logger.info(f"Trading Capital Configuration:")
         self.logger.info(f"  Trading Capital: {self.portfolio.trading_capital:.4f} SOL")
         self.logger.info(f"  Max Position: {settings.max_position_size_pct}% = {self.portfolio.calculate_max_trade_size():.4f} SOL")
@@ -38,6 +45,10 @@ class TradingBot:
             return
         self.prices.append(price)
         self.logger.info(f"Price: {price} USD")
+        
+        # Actualizar precio actual en simulador
+        if settings.simulation_mode and simulator:
+            simulator.update_current_price(price)
 
         # Check risk limits before generating new signal
         if exceed_max_drawdown(self.portfolio, price) and self.portfolio.base_balance > 0:
@@ -64,17 +75,20 @@ class TradingBot:
                 self.portfolio.update_from_trade("BUY", trade_size_sol, price)
                 log_trade({"side": "BUY", "price": price, "quantity": trade_size_sol})
                 
-                # Request quote for actual trade amount
-                amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
-                quote = await request_quote(
-                    input_mint="So11111111111111111111111111111111111111112",
-                    output_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                    amount=amount_lamports,
-                )
-                if quote:
-                    self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
-                
-                self.logger.info(f"Executed BUY {trade_size_sol:.4f} SOL @ ${price}")
+                if settings.simulation_mode:
+                    self.logger.info(f"🎮 SIMULADO: BUY {trade_size_sol:.4f} SOL @ ${price}")
+                else:
+                    # Solo hacer quote real si no estamos en simulación
+                    amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
+                    quote = await request_quote(
+                        input_mint="So11111111111111111111111111111111111111112",
+                        output_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                        amount=amount_lamports,
+                    )
+                    if quote:
+                        self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
+                    
+                    self.logger.info(f"⚠️  REAL: BUY {trade_size_sol:.4f} SOL @ ${price}")
             else:
                 reason = validation.get("reason", "Insufficient capital")
                 self.logger.info(f"BUY signal but cannot trade: {reason}")
@@ -86,17 +100,20 @@ class TradingBot:
             self.portfolio.update_from_trade("SELL", trade_size_sol, price)
             log_trade({"side": "SELL", "price": price, "quantity": trade_size_sol})
             
-            # Request quote for actual trade amount
-            amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
-            quote = await request_quote(
-                input_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                output_mint="So11111111111111111111111111111111111111112",
-                amount=amount_lamports,
-            )
-            if quote:
-                self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
-            
-            self.logger.info(f"Executed SELL {trade_size_sol:.4f} SOL @ ${price}")
+            if settings.simulation_mode:
+                self.logger.info(f"🎮 SIMULADO: SELL {trade_size_sol:.4f} SOL @ ${price}")
+            else:
+                # Solo hacer quote real si no estamos en simulación
+                amount_lamports = int(trade_size_sol * 1_000_000_000)  # Convert SOL to lamports
+                quote = await request_quote(
+                    input_mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                    output_mint="So11111111111111111111111111111111111111112",
+                    amount=amount_lamports,
+                )
+                if quote:
+                    self.logger.info(f"Quote outAmount: {quote.get('data')[0]['outAmount']}")
+                
+                self.logger.info(f"⚠️  REAL: SELL {trade_size_sol:.4f} SOL @ ${price}")
         else:
             self.logger.info("No trade executed")
 
