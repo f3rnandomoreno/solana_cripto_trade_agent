@@ -5,14 +5,37 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def derive_private_key_from_mnemonic(mnemonic: str):
+def derive_private_key_from_mnemonic(mnemonic: str, account: int = 0, change: int = 0) -> list | None:
+    """Derive a Solana private key from ``mnemonic`` using the standard BIP44 path.
+
+    Parameters
+    ----------
+    mnemonic: str
+        The 12 or 24 word mnemonic seed phrase.
+    account: int, optional
+        Account number for the derivation path, default is ``0``.
+    change: int, optional
+        Change index for the derivation path, default is ``0``.
+
+    Returns
+    -------
+    list | None
+        The derived private key as a list of integers or ``None`` if derivation fails.
+    """
+
     try:
-        from mnemonic import Mnemonic
-        from solders.keypair import Keypair
-        mnemo = Mnemonic("english")
-        seed = mnemo.to_seed(mnemonic)
-        keypair = Keypair.from_seed(seed[:32])
-        return list(keypair.to_bytes())
+        from bip_utils import Bip39SeedGenerator, Bip44, Bip44Coins, Bip44Changes
+
+        seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
+        bip44_ctx = (
+            Bip44.FromSeed(seed_bytes, Bip44Coins.SOLANA)
+            .Purpose()
+            .Coin()
+            .Account(account)
+            .Change(Bip44Changes(change))
+            .AddressIndex(0)
+        )
+        return list(bip44_ctx.PrivateKey().Raw().ToBytes())
     except Exception as e:
         print(f"Error derivando clave privada del mnemonic: {e}")
         return None

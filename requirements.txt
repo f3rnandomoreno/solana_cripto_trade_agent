@@ -10,3 +10,4 @@ websockets
 python-dotenv
 rich
 pythclient
+bip_utils
