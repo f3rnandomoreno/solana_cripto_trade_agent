@@ -46,11 +46,13 @@ solana-ai-bot/
 ├─ requirements.txt        ← librerías Python
 ├─ .env.example            ← plantilla de variables
 └─ src/
+   ├─ bot.py               ← loop principal
    ├─ main.py              ← punto de entrada
    ├─ config.py
    ├─ data/
    │  ├─ pyth_feed.py
-   │  └─ jupiter_quote.py
+   │  ├─ jupiter_quote.py
+   │  └─ mock_feed.py      ← feed simulado
    ├─ strategy/
    │  ├─ indicators.py
    │  ├─ model.py          ← ML ligero (opcional)
@@ -121,6 +123,7 @@ MAX_DRAWDOWN_PCT=20
 |--------|-----|----------------|
 | **Jupiter API** | Cotizaciones instantáneas + rutas de swap | `src/data/jupiter_quote.py` |
 | **Pyth Network** | Precio fiable on-chain (SOL/USD) | WebSocket vía `pyth-client-py` |
+| **Mock Feed** | Generación local de precios | `src/data/mock_feed.py` |
 
 ### 5.2 Strategy
 - **Indicadores técnicos (EMA 12/50, RSI 14, Bollinger 20/2)**
@@ -137,6 +140,9 @@ MAX_DRAWDOWN_PCT=20
 ### 5.4 Logger / Console UI
 - `utils/logger.py` configura el logging con `rich` y guarda cada trade en `logs/trades.csv`.
 - `utils/backtest.py` permite pruebas rápidas de la estrategia con datos históricos simulados.
+
+### 5.5 Trading loop
+- `bot.TradingBot` integra feed, estrategia y cartera en un loop asíncrono.
 
 ---
 

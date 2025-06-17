@@ -24,3 +24,9 @@ Implemented base structure with config loader and price fetch from Jupiter API.
 - Created `execution/portfolio.py` for basic position tracking.
 - Added `utils/logger.py` and `utils/backtest.py` with simple helpers.
 - Updated README with new module descriptions.
+
+## Step 5
+- Added `data/mock_feed.py` with a random-walk price generator for offline tests.
+- Implemented `TradingBot` class orchestrating feed, strategy and portfolio.
+- Simplified `main.py` to run the bot for a short demo.
+- Documented new modules and trading loop in README.
