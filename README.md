@@ -208,3 +208,6 @@ Este proyecto se publica bajo **GPL-3.0**.
 ---
 
 ¡Forkea este repo, ajusta la estrategia a tu estilo y comienza a probar en devnet!
+
+## 12. Development Log
+El progreso del desarrollo se documenta en [docs/devlog.md](docs/devlog.md).

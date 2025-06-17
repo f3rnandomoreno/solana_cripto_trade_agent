@@ -1,0 +1,11 @@
+solana>=0.31
+solders>=0.20
+anchorpy>=0.18
+jupiter-python-sdk>=0.4
+ta
+pandas
+numpy
+aiohttp
+websockets
+python-dotenv
+rich
