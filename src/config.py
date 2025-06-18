@@ -72,6 +72,7 @@ class Settings:
     trading_interval_sec: int = int(os.getenv("TRADING_INTERVAL_SEC", 60))
     slippage_bps: int = int(os.getenv("SLIPPAGE_BPS", 50))
     max_drawdown_pct: int = int(os.getenv("MAX_DRAWDOWN_PCT", 20))
+    jupiter_api_key: str = os.getenv("JUPITER_API_KEY", "")
     
     # Trading capital configuration
     trading_capital_sol: float = float(os.getenv("TRADING_CAPITAL_SOL", 0.1))

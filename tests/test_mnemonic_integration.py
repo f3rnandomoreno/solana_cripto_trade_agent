@@ -198,8 +198,10 @@ async def test_mnemonic_vs_private_key_priority():
     finally:
         # Cleanup
         os.unlink(temp_env_file)
-        # Reload original environment
+        # Reload original environment and clear variables
         load_dotenv(override=True)
+        os.environ.pop("MNEMONIC", None)
+        os.environ.pop("PRIVATE_KEY", None)
 
 
 if __name__ == "__main__":
