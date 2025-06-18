@@ -29,3 +29,24 @@ def bollinger_bands(prices: List[float], window: int = 20, num_std: float = 2) -
     upper = sma + num_std * std
     lower = sma - num_std * std
     return upper.iloc[-1], lower.iloc[-1]
+
+
+def compute_indicators(prices: List[float]) -> dict:
+    """Return a dictionary with key technical indicators for the price series."""
+    if not prices:
+        return {}
+
+    ema12_val = ema(prices, 12)
+    ema50_val = ema(prices, 50)
+    rsi_val = rsi(prices, 14)
+    upper_bb, lower_bb = bollinger_bands(prices)
+    sma20_val = pd.Series(prices).rolling(window=20).mean().iloc[-1]
+
+    return {
+        "ema12": float(ema12_val),
+        "ema50": float(ema50_val),
+        "sma20": float(sma20_val),
+        "rsi": float(rsi_val),
+        "upper_bb": float(upper_bb),
+        "lower_bb": float(lower_bb),
+    }
