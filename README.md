@@ -108,6 +108,7 @@ PRIVATE_KEY="CHANGE_ME"
 RPC_ENDPOINT="https://api.mainnet-beta.solana.com"
 # API de precios históricos (opcional)
 CRYPTOCOMPARE_KEY=""  # opcional
+JUPITER_API_KEY=""  # opcional, necesario para mayor cuota de la API de Jupiter
 # Parámetros de trading
 BASE_MINT="So11111111111111111111111111111111111111112"   # SOL
 QUOTE_MINT="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" # USDC
@@ -139,6 +140,7 @@ MAX_DRAWDOWN_PCT=20
 
 ### 5.3 Execution
 - Implementación en `execution/jupiter_client.py` para solicitar cotizaciones a Jupiter (stub si no hay red).
+- Si vas a operar en real, configura `JUPITER_API_KEY` para evitar límites de la API.
 - `execution/portfolio.py` mantiene el saldo de SOL/USDC y calcula P/L.
 - La versión completa usaría Jupiter Python SDK para construir la transacción, firmarla con `solana.Keypair` y enviarla mediante `client.send_raw_transaction`.
 

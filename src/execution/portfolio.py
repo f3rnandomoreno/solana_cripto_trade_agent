@@ -22,10 +22,12 @@ class Portfolio:
         """Initialize portfolio with trading capital configuration."""
         # Set trading capital from config
         self.trading_capital = settings.trading_capital_sol
-        
-        # Initialize with configured trading capital (not entire wallet)
-        self.quote_balance = self.trading_capital
-        self.peak_value = self.trading_capital
+
+        # Initialize balances only if not provided
+        if self.quote_balance == 0.0:
+            self.quote_balance = self.trading_capital
+        if self.peak_value == 0.0:
+            self.peak_value = self.quote_balance
 
     def update_from_trade(self, side: str, quantity: float, price: float, fee: float = 0.0) -> None:
         """Update balances after executing a trade."""
