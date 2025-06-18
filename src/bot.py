@@ -4,6 +4,7 @@ from typing import List, Optional
 from src.data.aggregated_feed import AggregatedPriceFeed
 from src.data.data_manager import data_manager
 from src.strategy.simple_strategy import generate_signal
+from src.strategy.indicators import compute_indicators
 from src.execution.portfolio import Portfolio
 from src.execution.jupiter_client import request_quote
 from src.execution.simulation_client import simulator
@@ -47,10 +48,16 @@ class TradingBot:
         
         # Guardar precio en base de datos (siempre de fuente real)
         data_manager.save_price_data(price, "aggregated")
-        
+
         self.prices.append(price)
         self.logger.info(f"Price: {price} USD")
-        
+
+        indicators = compute_indicators(self.prices)
+        if indicators:
+            self.logger.info(
+                "Indicadores => EMA12:{ema12:.2f} EMA50:{ema50:.2f} SMA20:{sma20:.2f} RSI:{rsi:.2f} BB:[{lower_bb:.2f}, {upper_bb:.2f}]".format(**indicators)
+            )
+
         # Actualizar precio actual en simulador
         if settings.simulation_mode and simulator:
             simulator.update_current_price(price)
@@ -64,6 +71,7 @@ class TradingBot:
             return
 
         signal = generate_signal(self.prices)
+        self.logger.info(f"Previsión de acción: {signal}")
 
         if signal == "BUY":
             # Calculate position size based on available capital
@@ -175,6 +183,14 @@ class TradingBot:
         )
         
         self.logger.info(f"Balances: {portfolio_data}")
+        self.logger.info(
+            "Estado actual => SOL:{sol:.4f} USDC:{usdc:.2f} UnrealizedPnL:{upnl:.2f} RealizedPnL:{rpnl:.2f}".format(
+                sol=portfolio_data.get("SOL", 0),
+                usdc=portfolio_data.get("USDC", 0),
+                upnl=portfolio_data.get("unrealized_pnl", 0),
+                rpnl=portfolio_data.get("realized_pnl", 0),
+            )
+        )
 
     async def run(self, steps: int = 50, interval: float = 1.0) -> None:
         for _ in range(steps):
